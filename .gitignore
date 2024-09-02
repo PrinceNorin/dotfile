@@ -1,0 +1,8 @@
+backups/
+emacs/elpa/
+emacs/auto-save-list/
+
+projects
+recentf
+
+!backups/.keep
