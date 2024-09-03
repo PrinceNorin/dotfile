@@ -34,7 +34,7 @@
   (setq calendar-location-name "Asia/Tokyo")
   (setq calendar-latitude 35.68)
   (setq calendar-longitude 139.68)
-  (change-theme 'solarized-light 'dracula))
+  (change-theme 'zenburn 'dracula))
 
 ;; Default settings
 (menu-bar-mode -1)
@@ -50,8 +50,16 @@
 
 (global-display-line-numbers-mode t)
 (setq display-line-numbers-type 'relative)
+(defvar disable-line-num-modes '(eshell-mode-hook
+                                 vterm-mode-hook
+                                 org-mode-hook))
+(dolist (mode disable-line-num-modes)
+  (add-hook mode (lambda () (display-line-numbers-mode -1))))
 
 (setq byte-compile-warnings '(not docstrings))
+
+;; Change font
+(set-frame-font "Fira Code Retina-12" nil t)
 
 ;; Dashboard
 (use-package dashboard
