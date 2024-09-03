@@ -1,6 +1,9 @@
 backups/
 emacs/elpa/
 emacs/auto-save-list/
+emacs/eln-cache/
+emacs/eshell/
+emacs/transient/
 
 projects
 recentf

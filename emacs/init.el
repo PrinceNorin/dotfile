@@ -24,12 +24,25 @@
 ;; Custom theme path
 (defvar custom-theme-dir (concat user-init-dir "themes"))
 (add-to-list 'custom-theme-load-path custom-theme-dir)
-(load-theme 'dracula t)
+
+(use-package solarized-theme
+  :ensure t)
+
+(use-package theme-changer
+  :ensure t
+  :config
+  (setq calendar-location-name "Asia/Tokyo")
+  (setq calendar-latitude 35.68)
+  (setq calendar-longitude 139.68)
+  (change-theme 'solarized-light 'dracula))
 
 ;; Default settings
 (menu-bar-mode -1)
 (tool-bar-mode -1)
-
+;; highlight current line
+(global-hl-line-mode t)
+;; disable blinking cursor
+(setq visible-cursor nil)
 (setq make-backup-files nil)
 
 (setq-default tab-width 2)
@@ -139,7 +152,7 @@
 ;; Fuzzy find
 (defcustom project-root-markers
   '("Cargo.toml" "compile_commands.json" "compile_flags.txt"
-    "project.clj" ".git" "deps.edn" "shadow-cljs.edn")
+    "project.clj" ".git" "deps.edn" "shadow-cljs.edn" "go.mod")
   "Files or directories that indicate the root of a project."
   :type '(repeat string)
   :group 'project)
@@ -159,12 +172,23 @@
 (add-to-list 'project-find-functions #'project-find-root)
 (define-key evil-normal-state-map (kbd "C-p") 'project-find-file)
 
+;; Git
+(use-package magit
+  :ensure t)
+
+(use-package git-gutter
+  :ensure t
+  :config
+  (global-git-gutter-mode t))
+
 ;; Do not edit these lines
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("c650a74280e8ce4ae4b50835b7a3bc62aeffa202ffea82260e529f0a69027696" default))
  '(package-selected-packages '(vertico company evil use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
