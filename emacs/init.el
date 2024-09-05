@@ -44,6 +44,8 @@
 ;; disable blinking cursor
 (setq visible-cursor nil)
 (setq make-backup-files nil)
+;; delete space as define by tab width
+(setq backward-delete-char-untabify 'hungry)
 
 (setq-default tab-width 2)
 (setq-default indent-tabs-mode nil)
@@ -134,6 +136,12 @@
   :config
   (doom-modeline-mode t))
 
+;; Syntax checker
+(use-package flycheck
+  :ensure t
+  :config
+  (add-hook 'after-init-hook #'global-flycheck-mode))
+
 ;; Go
 (use-package go-mode
   :ensure t
@@ -188,6 +196,10 @@
   :ensure t
   :config
   (global-git-gutter-mode t))
+
+;; Shell
+(use-package vterm
+  :ensure t)
 
 ;; Do not edit these lines
 (custom-set-variables
