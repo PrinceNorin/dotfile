@@ -7,7 +7,7 @@ local map = vim.api.nvim_set_keymap
 map('n', ',', '', {})
 vim.g.mapleader = ' '
 vim.cmd 'set inccommand=split'
-o.guicursor = 'n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50'
+o.guicursor = 'n-v-c:block,i-ci-ve:block,r-cr:hor20,o:hor50'
 o.updatetime = 1500
 o.timeoutlen = 400
 o.ttimeoutlen = 0
@@ -83,8 +83,8 @@ local autoCommands = {
   },
   -- format on write
   format_on_write = {
-    { 'BufWritePre', '*.lua', 'lua vim.lsp.buf.format()' },
     { 'BufWritePre', '*.go',  'lua vim.lsp.buf.format()' },
+    { 'BufWritePre', '*.lua', 'lua vim.lsp.buf.format()' },
     { 'BufWritePre', '*.erl', 'lua vim.lsp.buf.format()' },
   },
   compile_commands_generate = {
