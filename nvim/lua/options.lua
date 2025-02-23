@@ -86,6 +86,7 @@ local autoCommands = {
     { 'BufWritePre', '*.go',  'lua vim.lsp.buf.format()' },
     { 'BufWritePre', '*.lua', 'lua vim.lsp.buf.format()' },
     { 'BufWritePre', '*.erl', 'lua vim.lsp.buf.format()' },
+    { 'BufWritePre', '*.cs',  'lua vim.lsp.buf.format()' },
   },
   compile_commands_generate = {
     {

@@ -2,7 +2,8 @@ local cmp = require "cmp"
 local snippy = require('snippy')
 
 cmp.setup {
-  completion = { completeopt = "menu,menuone,noinsert", keyword_length = 1 },
+  preselect = cmp.PreselectMode.None,
+  -- completion = { completeopt = "menu,menuone,noinsert", keyword_length = 1 },
   experimental = { native_menu = false, ghost_text = false },
   snippet = {
     expand = function(args)
@@ -16,17 +17,18 @@ cmp.setup {
     },
   },
   mapping = {
-    ["<Up>"] = cmp.mapping(cmp.mapping.select_prev_item(), { "i", "c" }),
-    -- ["<S-Tab>"] = cmp.mapping(cmp.mapping.select_prev_item(), { "i", "c" }),
-    ["<Down>"] = cmp.mapping(cmp.mapping.select_next_item(), { "i", "c" }),
-    -- ["<Tab>"] = cmp.mapping(cmp.mapping.select_next_item(), { "i", "c" }),
+    ["<C-p>"] = cmp.mapping(cmp.mapping.select_prev_item(), { "i", "c" }),
+    ["<C-n>"] = cmp.mapping(cmp.mapping.select_next_item(), { "i", "c" }),
     ["<C-b>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
     ["<C-f>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
     ["<C-Space>"] = cmp.mapping(cmp.mapping.complete(), { "i", "c" }),
-    ["<Esc>"] = cmp.mapping { i = cmp.mapping.close(), c = cmp.mapping.close() },
+    -- Close menu when escape, but don't go into normal mode from insert mode
+    -- ["<Esc>"] = cmp.mapping { i = cmp.mapping.close(), c = cmp.mapping.close() },
     ["<CR>"] = cmp.mapping.confirm {
-      behavior = cmp.ConfirmBehavior.Replace,
-      select = true,
+      behavior = cmp.ConfirmBehavior.Insert,
+      select = false,
+      -- behavior = cmp.ConfirmBehavior.Replace,
+      -- select = true,
     },
   },
   sources = {

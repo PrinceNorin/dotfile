@@ -7,7 +7,8 @@ require("mason").setup {
     border = _border
   }
 }
-local ensure_installed = { "lua_ls", "gopls" }
+
+local ensure_installed = { "lua_ls", "gopls", "omnisharp" }
 if not vim.fn.has("android") then
   table.insert(ensure_installed, "rust_analyzer")
 end

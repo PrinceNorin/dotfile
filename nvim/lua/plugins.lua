@@ -212,7 +212,15 @@ local plugins = {
       require('plugin-configs.nvim-dap-gui')
     end,
   },
-  'theHamsta/nvim-dap-virtual-text'
+  'theHamsta/nvim-dap-virtual-text',
+
+  -- Shell
+  {
+    'akinsho/toggleterm.nvim',
+    config = function()
+      require('toggleterm').setup()
+    end
+  }
 }
 
 if vim.fn.has('macunix') == 1 then
