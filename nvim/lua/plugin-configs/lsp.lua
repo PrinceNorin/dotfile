@@ -82,3 +82,40 @@ vim.api.nvim_create_autocmd('BufWritePre', {
     vim.lsp.buf.format({ async = false })
   end
 })
+
+-- Zig config
+-- don't show parse errors in a separate window
+vim.g.zig_fmt_parse_errors = 0
+-- disable format-on-save from `ziglang/zig.vim`
+vim.g.zig_fmt_autosave = 0
+-- enable format-on-save from nvim-lspconfig + ZLS
+--
+-- formating with ZLS matches `zig fmt`.
+vim.api.nvim_create_autocmd('BufWritePre', {
+  pattern = { "*.zig", "*.zon" },
+  callback = function()
+    vim.lsp.buf.format({ async = false })
+    vim.lsp.buf.code_action({
+      context = { only = { "source.fixAll" } },
+      apply = true
+    })
+  end
+})
+
+lspconfig.zls.setup {
+  settings = {
+    zls = {
+      -- whether to enable build-on-save
+      enable_build_on_save = false,
+      semantic_tokens = "partial"
+    }
+  }
+}
+
+-- Rust config
+vim.api.nvim_create_autocmd('BufWritePre', {
+  pattern = '*.rs',
+  callback = function()
+    vim.lsp.buf.format({ async = false })
+  end,
+})

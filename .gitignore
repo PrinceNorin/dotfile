@@ -8,4 +8,4 @@ emacs/transient/
 projects
 recentf
 
-!backups/.keep
+nvim/language_servers/*

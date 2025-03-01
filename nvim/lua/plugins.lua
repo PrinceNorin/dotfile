@@ -104,6 +104,7 @@ local plugins = {
       require('Comment').setup()
     end,
   },
+  'ziglang/zig.vim',
 
   -- Window management
   {
@@ -190,9 +191,15 @@ local plugins = {
     'catppuccin/nvim',
     name = 'catppuccin',
     priority = 1000,
+    -- config = function()
+    --   require('catppuccin').setup({})
+    --   vim.cmd [[colorscheme catppuccin-mocha]]
+    -- end,
+  },
+  {
+    'JoosepAlviste/palenightfall.nvim',
     config = function()
-      require('catppuccin').setup({})
-      vim.cmd [[colorscheme catppuccin-mocha]]
+      require('palenightfall').setup()
     end,
   },
 

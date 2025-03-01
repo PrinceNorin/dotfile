@@ -7,6 +7,7 @@ local map = vim.api.nvim_set_keymap
 map('n', ',', '', {})
 vim.g.mapleader = ' '
 vim.cmd 'set inccommand=split'
+o.termguicolors = true
 o.guicursor = 'n-v-c:block,i-ci-ve:block,r-cr:hor20,o:hor50'
 o.updatetime = 1500
 o.timeoutlen = 400
