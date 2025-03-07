@@ -4,6 +4,7 @@ emacs/auto-save-list/
 emacs/eln-cache/
 emacs/eshell/
 emacs/transient/
+emacs/projects
 
 projects
 recentf
