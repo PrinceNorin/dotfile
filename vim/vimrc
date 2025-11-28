@@ -1,0 +1,229 @@
+" Basic Settings
+set nocompatible
+filetype off
+syntax on
+filetype plugin indent on
+
+set encoding=utf-8
+set number
+set relativenumber
+set smarttab
+set expandtab
+set tabstop=2
+set shiftwidth=2
+set softtabstop=2
+set autoindent
+set smartindent
+set nowrap
+set smartcase
+set noswapfile
+set nobackup
+set undodir=~/.vim/undo
+set undofile
+set incsearch
+set termguicolors
+
+" Plugin Section
+call plug#begin('~/.vim/plugged')
+
+" Theme
+Plug 'morhetz/gruvbox'
+
+" Language Server Protocol
+Plug 'neoclide/coc.nvim', { 'branch': 'release' }
+
+" Go Development
+Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+
+" JavaScript/React Development
+Plug 'pangloss/vim-javascript'
+Plug 'maxmellon/vim-jsx-pretty'
+Plug 'leafgarland/typescript-vim'
+Plug 'peitalin/vim-jsx-typescript'
+
+" File Navigation
+Plug 'preservim/nerdtree'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+
+" Status Line
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+
+" Git Integration
+Plug 'tpope/vim-fugitive'
+Plug 'airblade/vim-gitgutter'
+
+" Syntax Highlighting
+Plug 'sheerun/vim-polyglot'
+
+" Auto-Completion and Snippets
+Plug 'SirVer/ultisnips'
+Plug 'honza/vim-snippets'
+
+" Utilities
+Plug 'tpope/vim-commentary'
+Plug 'tpope/vim-surround'
+
+call plug#end()
+
+
+" Theme
+colorscheme gruvbox
+set background=dark
+
+" Key Mappings
+let mapleader=' '
+nnoremap j gj
+nnoremap k gk
+inoremap jk <esc>
+
+" NERDTree
+nnoremap <leader>n :NERDTreeFocus<CR>
+nnoremap <C-n> :NERDTree<CR>
+nnoremap <C-t> :NERDTreeToggle<CR>
+nnoremap <C-f> :NERDTreeFind<CR>
+
+" FZF
+nnoremap <C-p> :Files<CR>
+nnoremap <leader>b :Buffers<CR>
+
+" Navigation
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-h> <C-w>h
+nnoremap <C-l> <C-w>l
+
+" Coc.nvim Configuration
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-defition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+nmap <leader>rn <Plug>(coc-rename)
+
+" Use tab for trigger completion with characters ahead and navigate
+inoremap <silent><expr> <TAB>
+  \ coc#pum#visible() ? coc#pum#next(1) :
+  \ UltiSnips#CanExpandSnippet() ? "\<C-r>=UltiSnips#ExpandSnippet()\<CR>" :
+  \ UltiSnips#CanJumpForwards() ? "\<C-r>=UltiSnips#JumpForwards()\<CR>" :
+  \ <SID>check_back_space() ? "\<TAB>" :
+  \ coc#refresh()
+inoremap <expr><S-TAB>
+  \ coc#pum#visible() ? coc#pum#prev(1) :
+  \ UltiSnips#CanJumpBackwords() ? "\<C-r>=UltiSnips#JumpBackwords()\<CR>" :
+  \ "\<C-h>"
+
+" Use <CR> (Enter) to confirm completion
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<C-g>u\<CR>"
+
+" Unmap UltiSnips keys binding so that it can works with coc.vim
+let g:UltiSnipsExpandTrigger="<nop>"
+let g:UltiSnipsJumpForwardTrigger="<nop>"
+let g:UltiSnipsJumpBackwardTrigger="<nop>"
+let g:coc_global_extensions=["coc-java"]
+
+" Go Development Settings
+let g:go_fmt_command="goimports"
+let g:go_auto_type_info=1
+let g:go_highlight_types=1
+let g:go_highlight_fields=1
+let g:go_highlight_functions=1
+let g:go_highlight_function_calls=1
+let g:go_highlight_operators=1
+autocmd FileType go nmap <leader>t :GoTest<CR>
+autocmd FileType go nmap <leader>r :GoRun<CR>
+
+" React/JavaScript Settings
+let g:javascript_plugin_jsdoc=1
+let g:jsx_ext_required=0
+
+" Java Settings
+autocmd FileType java nmap <F5> :call CompileJavaProject()<CR>
+
+" Airline
+let g:airline#extensions#tabline#enabled=1
+let g:airline_powerline_fonts=1
+
+" Auto commands
+augroup vimrc
+  autocmd!
+  " Remove trailing whitespace on save
+  autocmd BufWritePre * %s/\s\+$//e
+  autocmd BufRead,BufNewFile *.md set filetype=markdown
+  autocmd BufWritePre * %s/\(\n\s*\)\+\%$//e
+augroup END
+
+
+"
+" Helper functions
+"
+
+" Function to check for backspace (used in coc tab completion)
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1] =~# '\s'
+endfunction
+
+" Find root project based on file marker
+function! FindProjectRoot(marker)
+  let l:start_dir = expand('%:p:h')
+  if l:start_dir == ''
+    let l:start_dir = getcmd()
+  endif
+
+  let l:empty_dir = ''
+  let l:current_dir = l:start_dir
+
+  while l:current_dir != '/'
+    let l:marker_path = l:current_dir . '/' . a:marker
+
+    if filereadable(l:marker_path) || isdirectory(l:marker_path)
+      return l:current_dir
+    endif
+
+    " Move up one directory
+    let l:parent_dir = fnamemodify(l:current_dir, ':h')
+    if l:parent_dir == l:current_dir
+      break
+    endif
+
+    let l:current_dir = l:parent_dir
+  endwhile
+
+  return l:empty_dir
+endfunction
+
+" Compile java project
+function! CompileJavaProject()
+  let l:project_dir = FindProjectRoot('.git')
+  if l:project_dir != ''
+    execute 'cd' fnameescape(l:project_dir)
+
+    let l:compile_cmd = 'mvn clean compile'
+    let l:settings_file = l:project_dir . '/settings.xml'
+
+    if filereadable(l:settings_file)
+      let l:compile_cmd = 'mvn -s settings.xml clean compile'
+    endif
+
+    echo "Compiling with: " . l:compile_cmd . "..."
+    let l:compile_output = system(l:compile_cmd)
+    let l:lines = split(l:compile_output, "\n")
+
+    let l:lists = []
+    for l:line in l:lines
+      call add(l:lists, { 'text': l:line })
+    endfor
+
+    call setqflist(l:lists)
+    copen
+
+    if v:shell_error != 0
+      echo "Compilation completed with errors"
+    else
+      echo "Compilation completed successfully"
+    endif
+  else
+    echo "Cannot find project root directory!"
+  endif
+endfunction
