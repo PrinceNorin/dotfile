@@ -177,10 +177,10 @@ setup_vim() {
 main() {
   log_info "Starting development environment setup..."
 
-  if command_exists apt-get; then
-    log_info "Updating package lists..."
-    sudo apt-get update
-  fi
+  # if command_exists apt-get; then
+  #   log_info "Updating package lists..."
+  #   sudo apt-get update
+  # fi
 
   install_asdf
 
