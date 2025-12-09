@@ -83,7 +83,6 @@
 
 ;; Better completion
 (use-package vertico
-  :ensure t
   :init
   (vertico-mode +1))
 
@@ -156,7 +155,6 @@
 
 ;; Projectile
 (use-package projectile
-  :ensure t
   :config
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1))
@@ -201,6 +199,41 @@
   :config
   (global-treesit-auto-mode))
 
+(add-to-list 'treesit-language-source-alist
+             '(java "https://github.com/tree-sitter/tree-sitter-java.git" "v0.23.5"))
+(add-to-list 'treesit-language-source-alist
+             '(kotlin "https://github.com/fwcd/tree-sitter-kotlin.git" "0.3.8"))
+(add-to-list 'treesit-language-source-alist
+             '(go "https://github.com/tree-sitter/tree-sitter-go.git" "v0.19.1"))
+(add-to-list 'treesit-language-source-alist
+             '(gomod "https://github.com/camdencheek/tree-sitter-go-mod.git" "v1.1.0"))
+
+(setq saint-ts-grammers '(go gomod java kotlin))
+(setq saint-ts-install-path
+  (expand-file-name "tree-sitter" user-emacs-directory))
+
+(defun saint/treesit-ensure-grammers-install ()
+  "Install grammers define in variable above."
+  (interactive)
+  (dolist (lang saint-ts-grammers)
+    (saint/treesit-ensure-grammer-install lang)))
+
+(defun saint/treesit-ensure-grammer-install (lang)
+  "Ensure a specific grammer is installed."
+  (unless (treesit-language-available-p lang)
+    (unless (saint/treesit-grammer-installed-p lang)
+      (message "tree-sitter grammer for %s not found, installing..." lang)
+      (treesit-install-language-grammar lang))))
+
+(defun saint/treesit-grammer-installed-p (lang)
+  "Check if grammer has already been installed."
+  (let* ((lang-file-name (concat "libtree-sitter-" (symbol-name lang) ".so"))
+        (lang-file-path (expand-file-name lang-file-name saint-ts-install-path)))
+    (file-exists-p lang-file-path)))
+
+(add-hook 'emacs-startup-hook 'saint/treesit-ensure-grammers-install)
+
+;; Eglot language server
 (use-package eglot
   :hook ((python-mode . eglot-ensure)
          (go-ts-mode . eglot-ensure)
@@ -234,6 +267,7 @@
 (with-eval-after-load 'eglot
   (add-hook 'after-save-hook #'eglot-format nil t))
 
+;; Company mode
 (use-package company
   :ensure t
   :hook (after-init . global-company-mode)
