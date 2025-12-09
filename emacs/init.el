@@ -83,8 +83,9 @@
 
 ;; Better completion
 (use-package vertico
+  :ensure t
   :init
-  (vertico-mode))
+  (vertico-mode +1))
 
 (use-package orderless
   :init
@@ -152,6 +153,20 @@
   (add-to-list 'project-vc-extra-root-markers ".git")
   (add-to-list 'project-vc-extra-root-markers "pom.xml")
   (add-to-list 'project-vc-extra-root-markers "build.gradle"))
+
+;; Projectile
+(use-package projectile
+  :ensure t
+  :config
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (projectile-mode +1))
+
+(defun projectile-project-root-marker (dir)
+  "Check for a custom .git root marker in DIR."
+  (when (file-exists-p (expand-file-name ".git" dir))
+    dir))
+
+(add-to-list 'projectile-project-root-files-functions #'projectile-project-root-marker)
 
 ;; Magit
 (use-package magit
