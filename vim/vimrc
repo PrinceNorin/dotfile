@@ -57,13 +57,10 @@ Plug 'airblade/vim-gitgutter'
 " Syntax Highlighting
 Plug 'sheerun/vim-polyglot'
 
-" Auto-Completion and Snippets
-Plug 'SirVer/ultisnips'
-Plug 'honza/vim-snippets'
-
 " Utilities
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-surround'
+Plug 'jiangmiao/auto-pairs'
 
 call plug#end()
 
@@ -76,6 +73,7 @@ set background=dark
 let mapleader=' '
 nnoremap j gj
 nnoremap k gk
+nnoremap <leader>w :w<cr>
 inoremap jk <esc>
 
 " NERDTree
@@ -104,23 +102,24 @@ nmap <leader>rn <Plug>(coc-rename)
 " Use tab for trigger completion with characters ahead and navigate
 inoremap <silent><expr> <TAB>
   \ coc#pum#visible() ? coc#pum#next(1) :
-  \ UltiSnips#CanExpandSnippet() ? "\<C-r>=UltiSnips#ExpandSnippet()\<CR>" :
-  \ UltiSnips#CanJumpForwards() ? "\<C-r>=UltiSnips#JumpForwards()\<CR>" :
   \ <SID>check_back_space() ? "\<TAB>" :
   \ coc#refresh()
 inoremap <expr><S-TAB>
   \ coc#pum#visible() ? coc#pum#prev(1) :
-  \ UltiSnips#CanJumpBackwords() ? "\<C-r>=UltiSnips#JumpBackwords()\<CR>" :
   \ "\<C-h>"
 
 " Use <CR> (Enter) to confirm completion
-inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<C-g>u\<CR>"
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<C-g>u\<CR>\<C-r>=coc#on_enter()\<CR>"
 
-" Unmap UltiSnips keys binding so that it can works with coc.vim
-let g:UltiSnipsExpandTrigger="<nop>"
-let g:UltiSnipsJumpForwardTrigger="<nop>"
-let g:UltiSnipsJumpBackwardTrigger="<nop>"
-let g:coc_global_extensions=["coc-java"]
+" Use K to show documentation in preview window
+nnoremap <slient> K :call ShowDocumentation()<cr>
+
+" Symbol renaming
+nmap <leader>rn <Plug>(coc-rename)
+
+" Formatting selected code
+vmap <leader>f <Plug>(coc-format-selected)
+nmap <leader>f <Plug>(coc-format-selected)
 
 " Go Development Settings
 let g:go_fmt_command="goimports"
@@ -138,6 +137,7 @@ let g:javascript_plugin_jsdoc=1
 let g:jsx_ext_required=0
 
 " Java Settings
+let g:coc_global_extensions=["coc-java"]
 autocmd FileType java nmap <F5> :call CompileJavaProject()<CR>
 
 " Airline
@@ -225,5 +225,13 @@ function! CompileJavaProject()
     endif
   else
     echo "Cannot find project root directory!"
+  endif
+endfunction
+
+function! ShowDocumentation()
+  if CocAction('hasProvider', 'hover')
+    call CocActionAsync('doHover')
+  else
+    call feedkeys('K', 'in')
   endif
 endfunction

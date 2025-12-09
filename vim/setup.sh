@@ -71,7 +71,7 @@ install_asdf() {
 install_nodejs() {
   log_info "Installing Node.js..."
 
-  if asdf list nodejs | grep -qP "\d+\.\d+\.\d+"; then
+  if asdf list nodejs | grep -E '[0-9]+\.[0-9]+\.[0-9]+' | grep '\*'; then
     log_warn "Node.js already installed"
     return 0
   fi
@@ -84,7 +84,7 @@ install_nodejs() {
   fi
 
   # Install latest LTS version of Node.js
-  NODE_VERSION=$(asdf list all nodejs | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | grep '^18\.' | tail -1)
+  NODE_VERSION=$(asdf list all nodejs | grep -E '[0-9]+\.[0-9]+\.[0-9]+' | grep '^18\.' | tail -1)
   asdf install nodejs "$NODE_VERSION"
   asdf global nodejs "$NODE_VERSION"
   log_success "Node.js $NODE_VERSION installed and set as global"
@@ -103,7 +103,7 @@ install_nodejs() {
 install_golang() {
   log_info "Installing Go..."
 
-  if asdf list golang | grep -qP "\d+\.\d+\.\d+"; then
+  if asdf list nodejs | grep -E '[0-9]+\.[0-9]+\.[0-9]+' | grep '\*'; then
     log_warn "Go already installed"
     return 0
   fi
@@ -116,7 +116,7 @@ install_golang() {
   fi
 
   # Install latest stable version of Go
-  GO_VERSION=$(asdf list all golang | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | grep -v 'rc\|beta' | tail -1)
+  GO_VERSION=$(asdf list all golang | grep -E '[0-9]+\.[0-9]+\.[0-9]+' | grep -v 'rc\|beta' | tail -1)
   if ! asdf list golang | grep -q "$GO_VERSION"; then
     asdf install golang "$GO_VERSION"
     asdf global golang "$GO_VERSION"

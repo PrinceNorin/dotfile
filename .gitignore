@@ -1,11 +1,6 @@
 backups/
-emacs/elpa/
-emacs/auto-save-list/
-emacs/eln-cache/
-emacs/eshell/
-emacs/transient/
 
-projects
-recentf
+emacs/*
+!emacs/*.el
 
 nvim/language_servers/*
