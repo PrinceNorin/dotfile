@@ -29,6 +29,16 @@
 ;; Installed packages
 ;; ====================
 
+(defun saint/default-font-setup ()
+  (let ((font-value
+         (cond
+          ((eq system-type 'gnu/linux) "Monospace-10")
+          ((eq system-type 'darwin) "Menlo-12")
+          ((eq system-type 'windows-nt) "Consolas-10")
+          (t "fixed"))))
+    (add-to-list 'default-frame-alist `(font . ,font-value))
+    (set-face-attribute 'default nil :font font-value)))
+
 ;; Better defaults
 (use-package emacs
   :init
@@ -43,6 +53,7 @@
   (setq frame-title-format '("%b - Emacs"))
   (setq inhibit-startup-screen t)
   (setq initial-scratch-message nil)
+  (saint/default-font-setup)
 
   ;; Editing
   (delete-selection-mode t)
