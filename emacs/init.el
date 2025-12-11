@@ -177,9 +177,13 @@
 
 (add-to-list 'projectile-project-root-files-functions #'projectile-project-root-marker)
 
-;; Magit
+;; Version control
 (use-package magit
   :bind ("C-x g" . magit-status))
+
+(use-package git-gutter
+  :config
+  (global-git-gutter-mode +1))
 
 ;; Terminal in Emacs
 (use-package vterm

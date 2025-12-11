@@ -5,7 +5,10 @@
  ;; If there is more than one, they won't work right.
  '(company-show-quick-access t nil nil "Customized with use-package company")
  '(package-selected-packages
-   '(projectile kotlin-ts-mode company-box company-capf company treesit-auto vterm magit expand-region undo-fu doom-themes doom-modeline which-key consult marginalia orderless vertico cmake-mode)))
+   '(cmake-mode company company-box company-capf consult doom-modeline
+                doom-themes expand-region git-gutter kotlin-ts-mode
+                magit marginalia orderless projectile treesit-auto
+                undo-fu vertico vterm which-key)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
