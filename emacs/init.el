@@ -235,11 +235,11 @@
 
 ;; Eglot language server
 (use-package eglot
-  :hook ((python-mode . eglot-ensure)
+  :hook ((python-ts-mode . eglot-ensure)
          (go-ts-mode . eglot-ensure)
-         (javascript-mode . eglot-ensure)
-         (typescript-mode . eglot-ensure)
-         (java-mode . eglot-ensure)
+         (javascript-ts-mode . eglot-ensure)
+         (typescript-ts-mode . eglot-ensure)
+         (java-ts-mode . eglot-ensure)
          (kotlin-ts-mode . eglot-ensure))
 
   :custom
@@ -254,38 +254,6 @@
                '((kotlin-mode kotlin-ts-mode) . ("kotlin-language-server")))
   (add-to-list 'eglot-server-programs
                '((go-mode go-ts-mode) . ("gopls"))))
-
-(defun saint/eglot-java-setup ()
-  "Setup Java LSP based on platform."
-  (let* ((jdtls-dir (expand-file-name user-emacs-directory "/lsp/jdtls"))
-         (java-exe (cond
-                    ((eq system-type 'windows-nt) "java.exe")
-                    (t "java"))))
-    (setq-local eglot-server-programs
-                 `((java-mode java-ts-mode)
-                   .
-                   (,java-exe
-                    "-Declipse.application=org.eclipse.jdt.ls.core.id1"
-                    "-Dosgi.bundles.defaultStartLevel=4"
-                    "-Declipse.product=org.eclipse.jdt.ls.core.product"
-                    "-Dlog.protocol=true"
-                    "-Dlog.level=ALL"
-                    "-Xms1g"
-                    "-Xmx2g"
-                    ;; "-javaagent:" ,lombok-path
-                    ;; "-Xbootclasspath/a:" ,lombok-path
-                    "--add-modules=ALL-SYSTEM"
-                    "--add-opens" "java.base/java.util=ALL-UNNAMED"
-                    "--add-opens" "java.base/java.lang=ALL-UNNAMED"
-                    "-jar" ,(expand-file-name "plugins/org.eclipse.equinox.launcher_*.jar" jdtls-dir)
-                    "-configuration" ,(expand-file-name 
-                                        (cond
-                                         ((eq system-type 'windows-nt) "config_win")
-                                         ((eq system-type 'darwin) "config_mac")
-                                         (t "config_linux")) 
-                                        jdtls-dir))))))
-
-(add-hook 'java-ts-mode-hook 'saint/eglot-java-setup)
 
 ;; Configure Go
 (use-package go-ts-mode
