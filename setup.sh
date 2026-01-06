@@ -8,7 +8,8 @@ INSTALL_DIR="$HOME/.local/share/tools/lsp"
 mkdir -p $INSTALL_DIR
 
 # Create temp directory
-mkdir lsp && pushd lsp
+mkdir -p lsp
+pushd lsp
 
 # Install java language server
 echo "Installing java language server..."
@@ -28,7 +29,7 @@ fi
 
 # Install kotlin language server
 echo "Installing kotlin language server..."
-if command -v kotlin-language-server >/dev/null 2&>1; then
+if command -v kotlin-language-server >/dev/null 2>&1; then
     echo "Kotlin language server already installed. Skip"
 else
     curl -fLo server.zip https://github.com/fwcd/kotlin-language-server/releases/download/1.3.13/server.zip \
