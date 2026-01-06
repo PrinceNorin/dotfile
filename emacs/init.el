@@ -199,6 +199,27 @@
 ;; Programming setup
 ;; ====================
 
+;; Delete up to to next tabstop
+(use-package hungry-delete
+  :ensure t
+  :hook (prog-mode . hungry-delete-mode)
+  :config
+  (setq hungry-delete-chars-to-skip " \t"))
+
+;; Configure Erlang
+(use-package erlang
+  :ensure t
+  :mode (("\\.erl\\'" . erlang-mode)
+         ("\\.hrl\\'" . erlang-mode)
+         ("\\.escript\\'" . erlang-mode))
+  :hook (erlang-mode . (lambda ()
+                         (electric-indent-mode 1)
+                         (setq indent-tabs-mode nil)
+                         (setq erlang-indent-level 4)
+                         (setq-local electric-indent-chars '(?\n ?\^?))
+                         (local-set-key (kbd "RET") 'newline-and-indent))))
+
+
 ;; Configure Kotlin
 (use-package kotlin-ts-mode
   :ensure t
@@ -258,8 +279,12 @@
          (kotlin-ts-mode . eglot-ensure))
 
   :custom
+  (eglot-sync-connect 1)
+  (eglot-autoshutdown t)
+  (eglot-extend-to-xref t)
+  (eglot-connect-timeout 60)
   (eglot-events-buffer-size 0)
-  (eglot-report-progress nil)
+  (eglot-report-progress t)
   (eglot-ignored-server-capabilities nil)
 
   :config
