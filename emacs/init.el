@@ -207,18 +207,27 @@
   (setq hungry-delete-chars-to-skip " \t"))
 
 ;; Configure Erlang
-(use-package erlang
+(use-package erlang-ts
   :ensure t
-  :mode (("\\.erl\\'" . erlang-mode)
-         ("\\.hrl\\'" . erlang-mode)
-         ("\\.escript\\'" . erlang-mode))
+  :mode (("\\.erl\\'" . erlang-ts-mode)
+         ("\\.hrl\\'" . erlang-ts-mode)
+         ("\\.escript\\'" . erlang-ts-mode)
+         ("rebar.config" . erlang-ts-mode))
   :hook (erlang-mode . (lambda ()
-                         (electric-indent-mode 1)
+                         (electric-indent-local-mode t)
                          (setq indent-tabs-mode nil)
                          (setq erlang-indent-level 4)
-                         (setq-local electric-indent-chars '(?\n ?\^?))
+                         (setq erlang-basic-offset 4)
+                         (setq erlang-argument-indent 4)
+                         (setq erlang-ts-mode-indent-offset 4)
                          (local-set-key (kbd "RET") 'newline-and-indent))))
 
+;; Configure Elixir
+(use-package elixir-ts-mode
+  :ensure t
+  :mode (("\\.ex\\'" . elixir-ts-mode)
+         ("\\.exs\\'" . elixir-ts-mode)
+         ("mix\\.lock" . elixir-ts-mode)))
 
 ;; Configure Kotlin
 (use-package kotlin-ts-mode
@@ -240,11 +249,13 @@
 (add-to-list 'treesit-language-source-alist
              '(kotlin "https://github.com/fwcd/tree-sitter-kotlin.git" "0.3.8"))
 (add-to-list 'treesit-language-source-alist
-             '(go "https://github.com/tree-sitter/tree-sitter-go.git" "v0.19.1"))
+             '(go "https://github.com/tree-sitter/tree-sitter-go.git" "v0.23.4"))
 (add-to-list 'treesit-language-source-alist
              '(gomod "https://github.com/camdencheek/tree-sitter-go-mod.git" "v1.1.0"))
+(add-to-list 'treesit-language-source-alist
+             '(elixir "https://github.com/elixir-lang/tree-sitter-elixir.git" "v0.3.4"))
 
-(setq saint-ts-grammers '(go gomod java kotlin))
+(setq saint-ts-grammers '(go gomod java kotlin elixir))
 (setq saint-ts-install-path
   (expand-file-name "tree-sitter" user-emacs-directory))
 
@@ -276,7 +287,8 @@
          (javascript-ts-mode . eglot-ensure)
          (typescript-ts-mode . eglot-ensure)
          (java-ts-mode . eglot-ensure)
-         (kotlin-ts-mode . eglot-ensure))
+         (kotlin-ts-mode . eglot-ensure)
+         (erlang-ts-mode . eglot-ensure))
 
   :custom
   (eglot-sync-connect 1)
@@ -288,24 +300,37 @@
   (eglot-ignored-server-capabilities nil)
 
   :config
+  (setopt eglot-server-programs
+          (assq-delete-all 'erlang-mode eglot-server-programs))
   (add-to-list 'eglot-server-programs
                '((java-mode java-ts-mode) . ("jdtls")))
   (add-to-list 'eglot-server-programs
                '((kotlin-mode kotlin-ts-mode) . ("kotlin-language-server")))
   (add-to-list 'eglot-server-programs
-               '((go-mode go-ts-mode) . ("gopls"))))
+               '((go-mode go-ts-mode) . ("gopls")))
+  (add-to-list 'eglot-server-programs
+               '((erlang-mode erlang-ts-mode) . ("elp" "server"))))
 
 ;; Configure Go
 (use-package go-ts-mode
   :ensure nil
+  :mode (("\\.go\\'" . go-ts-mode)
+         ("go.mod" . gomod-ts-mode)
+         ("go.sum" . gomod-ts-mode))
   :hook (go-ts-mode . (lambda ()
                         (setq tab-width 4)
                         (setq indent-tabs-mode t)
                         (setq go-ts-mode-indent-offset 4))))
 
 ;; Format on save
-(with-eval-after-load 'eglot
-  (add-hook 'after-save-hook #'eglot-format nil t))
+(defun saint/eglot-organize-import-and-format ()
+  "Only run organize and format in prog-mode"
+  (when (derived-mode-p 'prog-mode)
+    (ignore-errors
+      (call-interactively 'eglot-code-action-organize-imports))
+    (eglot-format-buffer)))
+
+(add-hook 'before-save-hook #'saint/eglot-organize-import-and-format nil t)
 
 ;; Company mode
 (use-package company
