@@ -17,6 +17,7 @@
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("gnu" . "https://elpa.gnu.org/packages/")
+                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
                          ("stable" . "https://stable.melpa.org/packages/")))
 (package-initialize)
 (unless (package-installed-p 'use-package)
@@ -90,7 +91,12 @@
   ;; Indentation
   (setq-default indent-tabs-mode nil)
   (setq-default tab-width 4)
-  (setq indent-line-function 'insert-tab))
+  (setq indent-line-function 'insert-tab)
+
+  :custom
+  (text-mode-ispell-word-completion nil)
+  (tab-always-indent 'complete)
+  (read-extended-command-predicate #'command-completion-default-include-p))
 
 ;; Better completion
 (use-package vertico
@@ -132,9 +138,11 @@
 (defun saint/setup-fonts ()
   "Setup fonts with fallbacks."
   (when (display-graphic-p)
-    (set-face-attribute 'default nil :family "Fira Code" :height 110)
-    (set-face-attribute 'fixed-pitch nil :family "Fira Code")
-    (set-face-attribute 'variable-pitch nil :family "Cantarell")))
+    (add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono-14"))
+    (set-face-attribute 'default nil :family "DejaVu Sans Mono" :height 140)
+    (set-face-attribute 'fixed-pitch nil :family "DejaVu Sans Mono")
+    (set-face-attribute 'variable-pitch nil :family "Cantarell")
+    (set-frame-font "DejaVu Sans Mono 14" nil t)))
 (add-hook 'after-init-hook #'saint/setup-fonts)
 
 
@@ -330,37 +338,79 @@
       (call-interactively 'eglot-code-action-organize-imports))
     (eglot-format-buffer)))
 
-(add-hook 'before-save-hook #'saint/eglot-organize-import-and-format nil t)
+(add-hook 'before-save-hook #'saint/eglot-organize-import-and-format)
 
-;; Company mode
-(use-package company
-  :ensure t
-  :hook (after-init . global-company-mode)
-
+;; Configure completion
+(use-package corfu
   :custom
-  (company-idle-delay 0.1)
-  (company-minimum-prefix-length 2)
-  (company-tooltip-limit 15)
-  (company-selection-wrap-around t)
-  (company-show-numbers t)
-  (company-transformers '(company-sort-by-occurrence))
-  (company-require-match nil)
-  (company-dabbrev-ignore-case nil)
-  (company-dabbrev-downcase nil)
+  (corfu-auto t)
+  (corfu-cycle t)
+  (corfu-preselect 'prompt)
 
   :config
-  ;; Use TAB for completion
-  (define-key company-active-map (kbd "TAB") 'company-complete-selection)
-  (define-key company-active-map (kbd "<tab>") 'company-complete-selection)
+  (keymap-unset corfu-map "RET")
 
-  ;; Use C-n and C-p to navigate
-  (define-key company-active-map (kbd "C-n") 'company-select-next)
-  (define-key company-active-map (kbd "C-p") 'company-select-previous))
+  :bind
+  (:map corfu-map
+        ("TAB" . corfu-next)
+        ("S-TAB" . corfu-previous))
 
-(use-package company-box
-  :ensure t
-  :if (display-graphic-p)
-  :hook (company-mode . company-box-mode))
+  :init
+  (global-corfu-mode))
+
+(use-package corfu-terminal
+  :init
+  (unless (display-graphic-p)
+    (corfu-terminal-mode +1)))
+
+(use-package orderless
+  :custom
+  (completion-category-defaults nil)
+  (completion-pcm-leading-wildcard t)
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles partial-completion)))))
+
+;; Override eglot flex category with orderless
+(with-eval-after-load 'eglot
+  (setq completion-category-defaults nil))
+
+;; Enable cache busting, depending on if server returns
+;; sufficiently many candidates
+;; (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+
+;; Company mode
+;; (use-package company
+;;   :ensure t
+;;   :hook (after-init . global-company-mode)
+
+;;   :custom
+;;   (company-idle-delay 0.1)
+;;   (company-minimum-prefix-length 2)
+;;   (company-tooltip-limit 15)
+;;   (company-selection-wrap-around nil)
+;;   (company-show-numbers t)
+;;   (company-transformers '(company-sort-by-occurrence))
+;;   (company-require-match nil)
+;;   (company-dabbrev-ignore-case nil)
+;;   (company-dabbrev-downcase nil)
+
+;;   :config
+;;   ;; Unbind Enter/Return key from company-complete-selection
+;;   (define-key company-active-map (kbd "RET") nil)
+;;   (define-key company-active-map (kbd "<return>") nil)
+  
+;;   ;; Use TAB for completion
+;;   (define-key company-active-map (kbd "TAB") 'company-complete-selection)
+;;   (define-key company-active-map (kbd "<tab>") 'company-complete-selection)
+
+;;   ;; Use C-n and C-p to navigate
+;;   (define-key company-active-map (kbd "C-n") 'company-select-next)
+;;   (define-key company-active-map (kbd "C-p") 'company-select-previous))
+
+;; (use-package company-box
+;;   :ensure t
+;;   :if (display-graphic-p)
+;;   :hook (company-mode . company-box-mode))
 
 
 ;; =====================
@@ -404,3 +454,15 @@
 (setq initial-buffer-choice t)
 
 (provide 'init)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages nil))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
