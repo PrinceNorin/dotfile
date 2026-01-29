@@ -30,15 +30,18 @@
 ;; Installed packages
 ;; ====================
 
+;; Load Shell Variables
+(use-package exec-path-from-shell
+  :init
+  (when (display-graphic-p)
+    (exec-path-from-shell-initialize)))
+
+
+;; Better GUI Font
 (defun saint/default-font-setup ()
-  (let ((font-value
-         (cond
-          ((eq system-type 'gnu/linux) "Monospace-10")
-          ((eq system-type 'darwin) "Menlo-12")
-          ((eq system-type 'windows-nt) "Consolas-10")
-          (t "fixed"))))
-    (add-to-list 'default-frame-alist `(font . ,font-value))
-    (set-face-attribute 'default nil :font font-value)))
+  (let ((font-name "Inconsolata Nerd Font Mono-12"))
+    (add-to-list 'default-frame-alist `(font . ,font-name))
+    (set-face-attribute 'default nil :font font-name)))
 
 ;; Better defaults
 (use-package emacs
@@ -61,7 +64,6 @@
   (global-auto-revert-mode t)
   (electric-pair-mode t)
   (show-paren-mode t)
-  (global-display-line-numbers-mode t)
 
   ;; Behavior
   (savehist-mode t)
@@ -96,7 +98,13 @@
   :custom
   (text-mode-ispell-word-completion nil)
   (tab-always-indent 'complete)
-  (read-extended-command-predicate #'command-completion-default-include-p))
+  (read-extended-command-predicate #'command-completion-default-include-p)
+
+  :hook
+  ((find-file . (lambda ()
+                 (unless (derived-mode-p 'prog-mode)
+                   (display-line-numbers-mode -1))))
+  (prog-mode . display-line-numbers-mode)))
 
 ;; Better completion
 (use-package vertico
@@ -133,17 +141,6 @@
 (use-package doom-themes
   :init
   (load-theme 'doom-one t))
-
-;; Better fonts
-(defun saint/setup-fonts ()
-  "Setup fonts with fallbacks."
-  (when (display-graphic-p)
-    (add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono-14"))
-    (set-face-attribute 'default nil :family "DejaVu Sans Mono" :height 140)
-    (set-face-attribute 'fixed-pitch nil :family "DejaVu Sans Mono")
-    (set-face-attribute 'variable-pitch nil :family "Cantarell")
-    (set-frame-font "DejaVu Sans Mono 14" nil t)))
-(add-hook 'after-init-hook #'saint/setup-fonts)
 
 
 ;; ====================
@@ -454,15 +451,3 @@
 (setq initial-buffer-choice t)
 
 (provide 'init)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages nil))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
