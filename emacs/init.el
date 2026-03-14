@@ -25,6 +25,11 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+(when (version< emacs-version "30")
+  (unless (package-installed-p 'vc-use-package)
+    (package-vc-install "https://github.com/slotThe/vc-use-package"))
+  (require 'vc-use-package))
+
 
 ;; ====================
 ;; Installed packages
@@ -39,7 +44,7 @@
 
 ;; Better GUI Font
 (defun saint/default-font-setup ()
-  (let ((font-name "Inconsolata Nerd Font Mono-12"))
+  (let ((font-name "FiraCode Nerd Font-9"))
     (add-to-list 'default-frame-alist `(font . ,font-name))
     (set-face-attribute 'default nil :font font-name)))
 
@@ -211,6 +216,21 @@
   :config
   (setq hungry-delete-chars-to-skip " \t"))
 
+;; Configure YAML
+(use-package yaml-mode
+  :mode ("\\.yaml\\'" "\\.yml\\'")
+  :config
+  (setq yaml-indent-offset 2)
+  (setq treesit-indent-function 2))
+
+(use-package yaml-pro
+  :after yaml-mode
+  :hook ((yaml-mode . yaml-pro-mode)
+         (yaml-ts-mode . yaml-pro-mode))
+  :config
+  (setq yaml-pro-indent 2)
+  (setq yaml-ts-indent-offset 2))
+
 ;; Configure Erlang
 (use-package erlang-ts
   :ensure t
@@ -254,13 +274,13 @@
 (add-to-list 'treesit-language-source-alist
              '(kotlin "https://github.com/fwcd/tree-sitter-kotlin.git" "0.3.8"))
 (add-to-list 'treesit-language-source-alist
-             '(go "https://github.com/tree-sitter/tree-sitter-go.git" "v0.23.4"))
+             '(go "https://github.com/tree-sitter/tree-sitter-go.git" "v0.20.0"))
 (add-to-list 'treesit-language-source-alist
              '(gomod "https://github.com/camdencheek/tree-sitter-go-mod.git" "v1.1.0"))
 (add-to-list 'treesit-language-source-alist
              '(elixir "https://github.com/elixir-lang/tree-sitter-elixir.git" "v0.3.4"))
 
-(setq saint-ts-grammers '(go gomod java kotlin elixir))
+(setq saint-ts-grammers '(python go gomod java kotlin elixir))
 (setq saint-ts-install-path
   (expand-file-name "tree-sitter" user-emacs-directory))
 
@@ -303,6 +323,7 @@
   (eglot-events-buffer-size 0)
   (eglot-report-progress t)
   (eglot-ignored-server-capabilities nil)
+  ;; (eldoc-display-functions '(eldoc-display-in-buffer))
 
   :config
   (setopt eglot-server-programs
@@ -335,37 +356,17 @@
       (call-interactively 'eglot-code-action-organize-imports))
     (eglot-format-buffer)))
 
+;; Trim whitespace and newline
+(defun saint/cleanup-on-save ()
+  "Only remove whitespace and trailing newline in prog-mode"
+  (when (derived-mode-p 'prog-mode)
+    ;; Delete all trailing whitespace
+    (delete-trailing-whitespace)))
+
+(add-hook 'before-save-hook #'saint/cleanup-on-save)
 (add-hook 'before-save-hook #'saint/eglot-organize-import-and-format)
 
 ;; Configure completion
-(use-package corfu
-  :custom
-  (corfu-auto t)
-  (corfu-cycle t)
-  (corfu-preselect 'prompt)
-
-  :config
-  (keymap-unset corfu-map "RET")
-
-  :bind
-  (:map corfu-map
-        ("TAB" . corfu-next)
-        ("S-TAB" . corfu-previous))
-
-  :init
-  (global-corfu-mode))
-
-(use-package corfu-terminal
-  :init
-  (unless (display-graphic-p)
-    (corfu-terminal-mode +1)))
-
-(use-package orderless
-  :custom
-  (completion-category-defaults nil)
-  (completion-pcm-leading-wildcard t)
-  (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles partial-completion)))))
 
 ;; Override eglot flex category with orderless
 (with-eval-after-load 'eglot
@@ -375,30 +376,124 @@
 ;; sufficiently many candidates
 ;; (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
 
+(use-package corfu
+  :ensure t
+  :custom
+  (corfu-auto t)
+  (corfu-preselect 'prompt)
+  (corfu-auto-delay 0.2)
+  (corfu-auto-prefix 1)
+  (corfu-cycle t)
+  (corfu-quit-at-boundary t)
+  (corfu-quit-no-match t)
+  (corfu-no-exact-match nil)
+
+  :bind
+  (:map corfu-map
+        ("C-p" . nil)
+        ("C-n" . nil)
+        ("TAB" . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ("RET" . corfu-complete-or-newline))
+
+  :init
+  (global-corfu-mode))
+
+(defun corfu-complete-or-newline ()
+  "If a candiate is selected, complete it. Otherwise insert a newline"
+  (interactive)
+  (if (and (bound-and-true-p corfu-mode)
+           corfu--candidates
+           corfu--index
+           (>= corfu--index 0))
+      (corfu-complete)
+    (newline)))
+
+;; Configure AI code completion
+(use-package dash
+  :ensure t)
+
+(use-package plz
+  :ensure t
+  :config
+  (setq plz-connect-timeout 10)
+  (setq plz-read-timeout 30))
+
+(use-package minuet
+  :after corfu
+  :config
+  ;; Set the provider to OpenAI FIM compatible
+  (setq minuet-provider 'openai-fim-compatible)
+
+  ;; Recommended for local models to save resources
+  (setq minuet-n-completions 1)
+
+  ;; Start with a moderate context window
+  (setq minuet-context-window 512)
+
+  ;; --- Docker Model Runner Configuration ---
+  (plist-put minuet-openai-fim-compatible-options
+             :end-point "http://localhost:12434/engines/llama.cpp/v1/completions")
+
+  ;; Friendly name for the provider
+  (plist-put minuet-openai-fim-compatible-options
+             :name "Docker-Model-Runner")
+
+  ;; No API key needed for local Docker Model Runner
+  (plist-put minuet-openai-fim-compatible-options
+             :api-key "TERM")  ; Just a placeholder
+
+  ;; Model name - use the one from your Docker Model Runner
+  (plist-put minuet-openai-fim-compatible-options
+             :model "huggingface.co/microsoft/phi-3-mini-4k-instruct-gguf")  ; or whatever model name you're using
+
+  ;; Optional: adjust timeout if needed (in seconds)
+  (setq minuet-request-timeout 5)
+
+  :bind (("M-i" . #'minuet-show-suggestion) ;; Example: manually trigger a suggestion
+         :map minuet-active-mode-map
+         ("<tab>" . #'minuet-accept-suggestion-line) ;; Accept the first line of the suggestion with Tab
+         ("M-A" . #'minuet-accept-suggestion)        ;; Accept the whole suggestion
+         ("M-n" . #'minuet-next-suggestion)          ;; Cycle to next suggestion
+         ("M-p" . #'minuet-previous-suggestion)      ;; Cycle to previous suggestion
+         ("M-e" . #'minuet-dismiss-suggestion)))     ;; Dismiss the suggestion
+
 ;; Company mode
 ;; (use-package company
 ;;   :ensure t
 ;;   :hook (after-init . global-company-mode)
 
 ;;   :custom
-;;   (company-idle-delay 0.1)
-;;   (company-minimum-prefix-length 2)
+;;   (company-idle-delay 0.2) ;; Enable auto complete
+;;   (company-minimum-prefix-length 1)
 ;;   (company-tooltip-limit 15)
-;;   (company-selection-wrap-around nil)
+;;   (company-selection-wrap-around t)
+
+;;   (company-auto-select nil)
+;;   (company-auto-select-p nil)
+
+;;   (company-auto-complete nil)
+;;   (company-auto-complete-chars nil)
+;;   (company-require-match 'never)
+
 ;;   (company-show-numbers t)
 ;;   (company-transformers '(company-sort-by-occurrence))
 ;;   (company-require-match nil)
 ;;   (company-dabbrev-ignore-case nil)
 ;;   (company-dabbrev-downcase nil)
 
+;;   (company-backends '((company-capf company-dabbrev-code)))
+
 ;;   :config
-;;   ;; Unbind Enter/Return key from company-complete-selection
-;;   (define-key company-active-map (kbd "RET") nil)
-;;   (define-key company-active-map (kbd "<return>") nil)
-  
-;;   ;; Use TAB for completion
-;;   (define-key company-active-map (kbd "TAB") 'company-complete-selection)
-;;   (define-key company-active-map (kbd "<tab>") 'company-complete-selection)
+;;   (define-key company-active-map (kbd "RET") 'company-complete-selection)
+;;   (define-key company-active-map (kbd "<return>") 'company-complete-selection)
+
+;;   ;; Use TAB to select next candidate
+;;   (define-key company-active-map (kbd "TAB") 'company-select-next)
+;;   (define-key company-active-map (kbd "<tab>") 'company-select-next)
+
+;;   ;; Use Shift-TAB to select previous candidate
+;;   (define-key company-active-map (kbd "<backtab") 'company-select-previous)
 
 ;;   ;; Use C-n and C-p to navigate
 ;;   (define-key company-active-map (kbd "C-n") 'company-select-next)
@@ -417,7 +512,10 @@
 ;; Easier window navigation
 (global-set-key (kbd "M-o") 'other-window)
 
-;; QUickly open config
+;; Manually trigger completion
+(global-set-key (kbd "M-/") 'company-complete)
+
+;; Quickly open config
 (defun saint/open-config ()
   "Open Emacs configuration."
   (interactive)
@@ -451,3 +549,16 @@
 (setq initial-buffer-choice t)
 
 (provide 'init)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-vc-selected-packages
+   '((vc-use-package :vc-backend Git :url "https://github.com/slotThe/vc-use-package"))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

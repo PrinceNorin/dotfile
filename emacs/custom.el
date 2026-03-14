@@ -3,9 +3,10 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(company-show-quick-access t nil nil "Customized with use-package company")
  '(package-selected-packages
-   '(corfu-terminal corfu elixir-ts-mode erlang-ts hungry-delete cmake-mode yaml-pro which-key vterm vertico undo-fu treesit-auto tree-sitter-langs projectile orderless marginalia magit kotlin-ts-mode haskell-mode git-gutter expand-region doom-themes doom-modeline consult company-box)))
+   '(minuet plz corfu-terminal corfu treesit-auto kotlin-ts-mode elixir-ts-mode erlang-ts hungry-delete vterm git-gutter magit projectile expand-region undo-fu doom-themes doom-modeline which-key consult marginalia orderless vertico exec-path-from-shell))
+ '(package-vc-selected-packages
+   '((vc-use-package :vc-backend Git :url "https://github.com/slotThe/vc-use-package"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
