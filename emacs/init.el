@@ -14,21 +14,25 @@
 ;; ====================
 ;; Package management
 ;; ====================
-(require 'package)
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("gnu" . "https://elpa.gnu.org/packages/")
-                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-                         ("stable" . "https://stable.melpa.org/packages/")))
-(package-initialize)
-(unless (package-installed-p 'use-package)
-  (package-install 'use-package))
-(require 'use-package)
-(setq use-package-always-ensure t)
+(setq package-enable-at-startup nil)
 
-(when (version< emacs-version "30")
-  (unless (package-installed-p 'vc-use-package)
-    (package-vc-install "https://github.com/slotThe/vc-use-package"))
-  (require 'vc-use-package))
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+(straight-use-package 'use-package)
 
 
 ;; ====================
@@ -37,6 +41,7 @@
 
 ;; Load Shell Variables
 (use-package exec-path-from-shell
+  :straight t
   :init
   (when (display-graphic-p)
     (exec-path-from-shell-initialize)))
@@ -47,6 +52,11 @@
   (let ((font-name "FiraCode Nerd Font-9"))
     (add-to-list 'default-frame-alist `(font . ,font-name))
     (set-face-attribute 'default nil :font font-name)))
+
+(use-package unicode-fonts
+  :straight t
+  :init
+  (unicode-fonts-setup))
 
 ;; Better defaults
 (use-package emacs
@@ -107,26 +117,31 @@
 
   :hook
   ((find-file . (lambda ()
-                 (unless (derived-mode-p 'prog-mode)
-                   (display-line-numbers-mode -1))))
-  (prog-mode . display-line-numbers-mode)))
+                  (unless (derived-mode-p 'prog-mode)
+                    (display-line-numbers-mode -1))))
+   (prog-mode . display-line-numbers-mode)
+   (prog-mode . hl-line-mode)))
 
 ;; Better completion
 (use-package vertico
+  :straight t
   :init
   (vertico-mode +1))
 
 (use-package orderless
+  :straight t
   :init
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion)))))
 
 (use-package marginalia
+  :straight t
   :init
   (marginalia-mode))
 
 (use-package consult
+  :straight t
   :bind (("C-s" . consult-line)
          ("C-x b" . consult-buffer)
          ("M-y" . consult-yank-pop)
@@ -134,18 +149,51 @@
 
 ;; Which-key
 (use-package which-key
+  :straight t
   :init
   (which-key-mode))
 
 ;; Better modeline
 (use-package doom-modeline
-  :init
-  (doom-modeline-mode))
+  :straight t
+  :hook (after-init . doom-modeline-mode)
+  :config
+  (setq doom-modeline-bar-width 3
+        doom-modeline-buffer-encoding t
+        doom-modeline-indent-info t
+        doom-modeline-buffer-file-name-style 'relative-from-project
+        doom-modeline-lsp t
+        doom-modeline-checker-simple-format t
+        doom-modeline-vcs-max-length 50
+        doom-modeline-enable-vcs t
+        doom-modeline-vcs t))
 
 ;; Modern theme
 (use-package doom-themes
+  :straight t
   :init
-  (load-theme 'doom-one t))
+  (load-theme 'doom-solarized-light t))
+
+;; Adjusting for macOS
+(when (eq system-type 'darwin)
+  (when (< emacs-major-version 29)
+    (use-package osx-trash
+      :straight t))
+
+  (use-package ns-auto-titlebar
+    :straight t)
+
+  (setq locate-command "mdfind")
+  (setq ns-pop-up-frames nil)
+  (setq mac-redisplay-dont-reset-vscroll t
+        mac-mouse-wheel-smooth-scroll nil)
+
+  (and (or (daemonp)
+           (display-graphic-p))
+       (require 'ns-auto-titlebar nil t)
+       (ns-auto-titlebar-mode +1))
+
+  (setq delete-by-moving-to-trash (not noninteractive)))
 
 
 ;; ====================
@@ -153,12 +201,14 @@
 ;; ====================
 
 (use-package undo-fu
+  :straight t
   :config
   (global-unset-key (kbd "C-z"))
   (global-set-key (kbd "C-z") 'undo-fu-only-undo)
   (global-set-key (kbd "C-S-z") 'undo-fu-only-redo))
 
 (use-package expand-region
+  :straight t
   :bind ("C-=" . er/expand-region))
 
 
@@ -168,6 +218,7 @@
 
 ;; Project management
 (use-package project
+  :straight t
   :bind (("C-x p" . project-switch-project))
   :config
   (add-to-list 'project-vc-extra-root-markers ".git")
@@ -176,6 +227,7 @@
 
 ;; Projectile
 (use-package projectile
+  :straight t
   :config
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1))
@@ -189,18 +241,22 @@
 
 ;; Version control
 (use-package magit
+  :straight t
   :bind ("C-x g" . magit-status))
 
 (use-package git-gutter
+  :straight t
   :config
   (global-git-gutter-mode +1))
 
 ;; Terminal in Emacs
 (use-package vterm
+  :straight t
   :commands vterm)
 
 ;; Better window management
 (use-package winner
+  :straight t
   :init
   (winner-mode))
 
@@ -211,7 +267,7 @@
 
 ;; Delete up to to next tabstop
 (use-package hungry-delete
-  :ensure t
+  :straight t
   :hook (prog-mode . hungry-delete-mode)
   :config
   (setq hungry-delete-chars-to-skip " \t"))
@@ -224,6 +280,7 @@
   (setq treesit-indent-function 2))
 
 (use-package yaml-pro
+  :straight t
   :after yaml-mode
   :hook ((yaml-mode . yaml-pro-mode)
          (yaml-ts-mode . yaml-pro-mode))
@@ -233,7 +290,6 @@
 
 ;; Configure Erlang
 (use-package erlang-ts
-  :ensure t
   :mode (("\\.erl\\'" . erlang-ts-mode)
          ("\\.hrl\\'" . erlang-ts-mode)
          ("\\.escript\\'" . erlang-ts-mode)
@@ -249,14 +305,12 @@
 
 ;; Configure Elixir
 (use-package elixir-ts-mode
-  :ensure t
   :mode (("\\.ex\\'" . elixir-ts-mode)
          ("\\.exs\\'" . elixir-ts-mode)
          ("mix\\.lock" . elixir-ts-mode)))
 
 ;; Configure Kotlin
 (use-package kotlin-ts-mode
-  :ensure t
   :mode ("\\.kt\\'" "\\.kts\\'")
   :config
   (setq kotlin-tab-width 4)
@@ -264,6 +318,7 @@
 
 ;; Treesitter
 (use-package treesit-auto
+  :straight t
   :init
   (setq treesit-font-lock-level 4)
   :config
@@ -282,7 +337,7 @@
 
 (setq saint-ts-grammers '(python go gomod java kotlin elixir))
 (setq saint-ts-install-path
-  (expand-file-name "tree-sitter" user-emacs-directory))
+      (expand-file-name "tree-sitter" user-emacs-directory))
 
 (defun saint/treesit-ensure-grammers-install ()
   "Install grammers define in variable above."
@@ -300,46 +355,57 @@
 (defun saint/treesit-grammer-installed-p (lang)
   "Check if grammer has already been installed."
   (let* ((lang-file-name (concat "libtree-sitter-" (symbol-name lang) ".so"))
-        (lang-file-path (expand-file-name lang-file-name saint-ts-install-path)))
+         (lang-file-path (expand-file-name lang-file-name saint-ts-install-path)))
     (file-exists-p lang-file-path)))
 
 (add-hook 'emacs-startup-hook 'saint/treesit-ensure-grammers-install)
 
-;; Eglot language server
-(use-package eglot
-  :hook ((python-ts-mode . eglot-ensure)
-         (go-ts-mode . eglot-ensure)
-         (javascript-ts-mode . eglot-ensure)
-         (typescript-ts-mode . eglot-ensure)
-         (java-ts-mode . eglot-ensure)
-         (kotlin-ts-mode . eglot-ensure)
-         (erlang-ts-mode . eglot-ensure))
-
-  :custom
-  (eglot-sync-connect 1)
-  (eglot-autoshutdown t)
-  (eglot-extend-to-xref t)
-  (eglot-connect-timeout 60)
-  (eglot-events-buffer-size 0)
-  (eglot-report-progress t)
-  (eglot-ignored-server-capabilities nil)
-  ;; (eldoc-display-functions '(eldoc-display-in-buffer))
-
+;; Configure LSP Mode
+(use-package lsp-mode
+  :straight t
+  :hook
+  ((python-ts-mode . lsp)
+   (js-ts-mode . lsp)
+   (typescript-ts-mode . lsp)
+   (go-ts-mode . lsp)
+   (c-mode . lsp)
+   (c++-mode . lsp)
+   (java-ts-mode . lsp)
+   (kotlin-ts-mode . lsp)
+   (lua-mode . lsp)
+   (ruby-mode . lsp)
+   (php-mode . lsp))
   :config
-  (setopt eglot-server-programs
-          (assq-delete-all 'erlang-mode eglot-server-programs))
-  (add-to-list 'eglot-server-programs
-               '((java-mode java-ts-mode) . ("jdtls")))
-  (add-to-list 'eglot-server-programs
-               '((kotlin-mode kotlin-ts-mode) . ("kotlin-language-server")))
-  (add-to-list 'eglot-server-programs
-               '((go-mode go-ts-mode) . ("gopls")))
-  (add-to-list 'eglot-server-programs
-               '((erlang-mode erlang-ts-mode) . ("elp" "server"))))
+  (setq lsp-completion-provider :none))
+
+(use-package lsp-ui
+  :straight t
+  :commands lsp-ui-mode
+  :config
+  (setq lsp-ui-peek-enable t
+        lsp-ui-peek-always-show t
+        lsp-ui-doc-enable t
+        lsp-ui-doc-position 'top
+        lsp-ui-doc-header t
+        lsp-ui-doc-include-signature t
+        lsp-ui-doc-border (face-foreground 'default)
+        lsp-ui-sideline-enable t
+        lsp-ui-sideline-show-hover t
+        lsp-ui-sideline-show-diagnostics t
+        lsp-ui-sideline-show-code-actions t
+        lsp-ui-imenu-enable t
+        lsp-ui-flycheck-enable t))
+
+;; Format on save
+(use-package apheleia
+  :straight t
+  :config
+  (apheleia-global-mode +1)
+  (setf (alist-get 'go-ts-mode apheleia-mode-alist)
+        '(goimports)))
 
 ;; Configure Go
 (use-package go-ts-mode
-  :ensure nil
   :mode (("\\.go\\'" . go-ts-mode)
          ("go.mod" . gomod-ts-mode)
          ("go.sum" . gomod-ts-mode))
@@ -348,79 +414,141 @@
                         (setq indent-tabs-mode t)
                         (setq go-ts-mode-indent-offset 4))))
 
-;; Format on save
-(defun saint/eglot-organize-import-and-format ()
-  "Only run organize and format in prog-mode"
-  (when (derived-mode-p 'prog-mode)
-    (ignore-errors
-      (call-interactively 'eglot-code-action-organize-imports))
-    (eglot-format-buffer)))
-
-;; Trim whitespace and newline
-(defun saint/cleanup-on-save ()
-  "Only remove whitespace and trailing newline in prog-mode"
-  (when (derived-mode-p 'prog-mode)
-    ;; Delete all trailing whitespace
-    (delete-trailing-whitespace)))
-
-(add-hook 'before-save-hook #'saint/cleanup-on-save)
-(add-hook 'before-save-hook #'saint/eglot-organize-import-and-format)
-
 ;; Configure completion
+(use-package nerd-icons
+  :straight t
+  :commands (nerd-icons-octicon
+             nerd-icons-faicon
+             nerd-icons-flicon
+             nerd-icons-wicon
+             nerd-icons-mdicon
+             nerd-icons-codicon
+             nerd-icons-devicon
+             nerd-icons-ipsicon
+             nerd-icons-pomicon
+             nerd-icons-powerline))
 
-;; Override eglot flex category with orderless
-(with-eval-after-load 'eglot
-  (setq completion-category-defaults nil))
-
-;; Enable cache busting, depending on if server returns
-;; sufficiently many candidates
-;; (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
-
-(use-package corfu
-  :ensure t
-  :custom
-  (corfu-auto t)
-  (corfu-preselect 'prompt)
-  (corfu-auto-delay 0.2)
-  (corfu-auto-prefix 1)
-  (corfu-cycle t)
-  (corfu-quit-at-boundary t)
-  (corfu-quit-no-match t)
-  (corfu-no-exact-match nil)
-
-  :bind
-  (:map corfu-map
-        ("C-p" . nil)
-        ("C-n" . nil)
-        ("TAB" . corfu-next)
-        ("S-TAB" . corfu-previous)
-        ("RET" . corfu-complete-or-newline))
-
+(use-package company
+  :straight t
+  :commands (company-complete-common
+             company-complete-common-or-cycle
+             company-manual-begin
+             company-grab-line)
   :init
-  (global-corfu-mode))
+  (setq company-minimum-prefix-length 2
+        company-tooltip-limit 14
+        company-tooltip-align-annotations t
+        company-require-match 'never
+        company-idle-delay
+        (if (featurep :system 'macos)
+            0.4
+          0.26)
+        company-global-modes
+        '(not erc-mode
+              circe-mode
+              message-mode
+              help-mode
+              gud-mode
+              vterm-mode)
+        company-frontends
+        '(company-pseudo-tooltip-frontend
+          company-echo-metadata-frontend)
+        company-backends '(company-capf)
+        company-auto-commit t
+        company-dabbrev-other-buffers nil
+        company-dabbrev-ignore-case nil
+        company-dabbrev-downcase nil)
+  (global-company-mode))
 
-(defun corfu-complete-or-newline ()
-  "If a candiate is selected, complete it. Otherwise insert a newline"
-  (interactive)
-  (if (and (bound-and-true-p corfu-mode)
-           corfu--candidates
-           corfu--index
-           (>= corfu--index 0))
-      (corfu-complete)
-    (newline)))
+(use-package company-box
+  :straight t
+  :hook (company-mode . company-box-mode)
+  :config
+  (setq company-box-show-single-candidate t
+        company-box-backends-colors nil
+        company-box-tooltip-limit 50
+        company-box-icons-alist 'company-box-icons-nerd-icons
+        company-box-icons-nerd-icons
+        `((Unknown        . ,(nerd-icons-codicon  "nf-cod-code"                :face  'font-lock-warning-face))
+          (Text           . ,(nerd-icons-codicon  "nf-cod-text_size"           :face  'font-lock-doc-face))
+          (Method         . ,(nerd-icons-codicon  "nf-cod-symbol_method"       :face  'font-lock-function-name-face))
+          (Function       . ,(nerd-icons-codicon  "nf-cod-symbol_method"       :face  'font-lock-function-name-face))
+          (Constructor    . ,(nerd-icons-codicon  "nf-cod-triangle_right"      :face  'font-lock-function-name-face))
+          (Field          . ,(nerd-icons-codicon  "nf-cod-symbol_field"        :face  'font-lock-variable-name-face))
+          (Variable       . ,(nerd-icons-codicon  "nf-cod-symbol_variable"     :face  'font-lock-variable-name-face))
+          (Class          . ,(nerd-icons-codicon  "nf-cod-symbol_class"        :face  'font-lock-type-face))
+          (Interface      . ,(nerd-icons-codicon  "nf-cod-symbol_interface"    :face  'font-lock-type-face))
+          (Module         . ,(nerd-icons-codicon  "nf-cod-file_submodule"      :face  'font-lock-preprocessor-face))
+          (Property       . ,(nerd-icons-codicon  "nf-cod-symbol_property"     :face  'font-lock-variable-name-face))
+          (Unit           . ,(nerd-icons-codicon  "nf-cod-symbol_ruler"        :face  'font-lock-constant-face))
+          (Value          . ,(nerd-icons-codicon  "nf-cod-symbol_field"        :face  'font-lock-builtin-face))
+          (Enum           . ,(nerd-icons-codicon  "nf-cod-symbol_enum"         :face  'font-lock-builtin-face))
+          (Keyword        . ,(nerd-icons-codicon  "nf-cod-symbol_keyword"      :face  'font-lock-keyword-face))
+          (Snippet        . ,(nerd-icons-codicon  "nf-cod-symbol_snippet"      :face  'font-lock-string-face))
+          (Color          . ,(nerd-icons-codicon  "nf-cod-symbol_color"        :face  'success))
+          (File           . ,(nerd-icons-codicon  "nf-cod-symbol_file"         :face  'font-lock-string-face))
+          (Reference      . ,(nerd-icons-codicon  "nf-cod-references"          :face  'font-lock-variable-name-face))
+          (Folder         . ,(nerd-icons-codicon  "nf-cod-folder"              :face  'font-lock-variable-name-face))
+          (EnumMember     . ,(nerd-icons-codicon  "nf-cod-symbol_enum_member"  :face  'font-lock-builtin-face))
+          (Constant       . ,(nerd-icons-codicon  "nf-cod-symbol_constant"     :face  'font-lock-constant-face))
+          (Struct         . ,(nerd-icons-codicon  "nf-cod-symbol_structure"    :face  'font-lock-variable-name-face))
+          (Event          . ,(nerd-icons-codicon  "nf-cod-symbol_event"        :face  'font-lock-warning-face))
+          (Operator       . ,(nerd-icons-codicon  "nf-cod-symbol_operator"     :face  'font-lock-comment-delimiter-face))
+          (TypeParameter  . ,(nerd-icons-codicon  "nf-cod-list_unordered"      :face  'font-lock-type-face))
+          (Template       . ,(nerd-icons-codicon  "nf-cod-symbol_snippet"      :face  'font-lock-string-face))
+          (ElispFunction  . ,(nerd-icons-codicon  "nf-cod-symbol_method"       :face  'font-lock-function-name-face))
+          (ElispVariable  . ,(nerd-icons-codicon  "nf-cod-symbol_variable"     :face  'font-lock-variable-name-face))
+          (ElispFeature   . ,(nerd-icons-codicon  "nf-cod-globe"               :face  'font-lock-builtin-face))
+          (ElispFace      . ,(nerd-icons-codicon  "nf-cod-symbol_color"        :face  'success))))
+  (setq x-gtk-resize-child-frames 'resize-mode)
+  (add-to-list 'company-box-frame-parameters '(tab-bar-lines . 0)))
+
+;; (defun corfu-complete-or-newline ()
+;;   "If a candiate is selected, complete it. Otherwise insert a newline"
+;;   (interactive)
+;;   (if (and (bound-and-true-p corfu-mode)
+;;            corfu--candidates
+;;            corfu--index
+;;            (>= corfu--index 0))
+;;       (corfu-complete)
+;;     (newline)))
+
+;; (use-package corfu
+;;   :ensure t
+;;   :custom
+;;   (corfu-auto t)
+;;   (corfu-preselect 'prompt)
+;;   (corfu-auto-delay 0.2)
+;;   (corfu-auto-prefix 1)
+;;   (corfu-cycle t)
+;;   (corfu-quit-at-boundary t)
+;;   (corfu-quit-no-match t)
+;;   (corfu-no-exact-match nil)
+
+;;   :bind
+;;   (:map corfu-map
+;;         ("C-p" . nil)
+;;         ("C-n" . nil)
+;;         ("TAB" . corfu-next)
+;;         ("S-TAB" . corfu-previous)
+;;         ("RET" . corfu-complete-or-newline))
+
+;;   :init
+;;   (global-corfu-mode))
 
 ;; Configure AI code completion
 (use-package dash
-  :ensure t)
+  :straight t)
 
 (use-package plz
-  :ensure t
+  :straight t
   :config
   (setq plz-connect-timeout 10)
   (setq plz-read-timeout 30))
 
 (use-package minuet
-  :after corfu
+  :straight t
+  :after company
   :config
   ;; Set the provider to OpenAI FIM compatible
   (setq minuet-provider 'openai-fim-compatible)
@@ -458,52 +586,6 @@
          ("M-p" . #'minuet-previous-suggestion)      ;; Cycle to previous suggestion
          ("M-e" . #'minuet-dismiss-suggestion)))     ;; Dismiss the suggestion
 
-;; Company mode
-;; (use-package company
-;;   :ensure t
-;;   :hook (after-init . global-company-mode)
-
-;;   :custom
-;;   (company-idle-delay 0.2) ;; Enable auto complete
-;;   (company-minimum-prefix-length 1)
-;;   (company-tooltip-limit 15)
-;;   (company-selection-wrap-around t)
-
-;;   (company-auto-select nil)
-;;   (company-auto-select-p nil)
-
-;;   (company-auto-complete nil)
-;;   (company-auto-complete-chars nil)
-;;   (company-require-match 'never)
-
-;;   (company-show-numbers t)
-;;   (company-transformers '(company-sort-by-occurrence))
-;;   (company-require-match nil)
-;;   (company-dabbrev-ignore-case nil)
-;;   (company-dabbrev-downcase nil)
-
-;;   (company-backends '((company-capf company-dabbrev-code)))
-
-;;   :config
-;;   (define-key company-active-map (kbd "RET") 'company-complete-selection)
-;;   (define-key company-active-map (kbd "<return>") 'company-complete-selection)
-
-;;   ;; Use TAB to select next candidate
-;;   (define-key company-active-map (kbd "TAB") 'company-select-next)
-;;   (define-key company-active-map (kbd "<tab>") 'company-select-next)
-
-;;   ;; Use Shift-TAB to select previous candidate
-;;   (define-key company-active-map (kbd "<backtab") 'company-select-previous)
-
-;;   ;; Use C-n and C-p to navigate
-;;   (define-key company-active-map (kbd "C-n") 'company-select-next)
-;;   (define-key company-active-map (kbd "C-p") 'company-select-previous))
-
-;; (use-package company-box
-;;   :ensure t
-;;   :if (display-graphic-p)
-;;   :hook (company-mode . company-box-mode))
-
 
 ;; =====================
 ;; Keybindings
@@ -511,9 +593,6 @@
 
 ;; Easier window navigation
 (global-set-key (kbd "M-o") 'other-window)
-
-;; Manually trigger completion
-(global-set-key (kbd "M-/") 'company-complete)
 
 ;; Quickly open config
 (defun saint/open-config ()
@@ -549,16 +628,3 @@
 (setq initial-buffer-choice t)
 
 (provide 'init)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-vc-selected-packages
-   '((vc-use-package :vc-backend Git :url "https://github.com/slotThe/vc-use-package"))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
