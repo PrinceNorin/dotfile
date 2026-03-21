@@ -9,5 +9,7 @@ return {
     })
 
     vim.lsp.enable('gopls')
+    vim.lsp.enable('jdtls')
+    vim.lsp.enable('kotlin-lsp')
   end,
 }

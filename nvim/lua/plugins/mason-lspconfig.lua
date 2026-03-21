@@ -7,7 +7,7 @@ return {
   config = function()
     require('mason-lspconfig').setup({
       automatic_enable = true,
-      ensure_installed = { 'gopls' }
+      ensure_installed = { 'gopls', 'jdtls' }
     })
   end,
 }
