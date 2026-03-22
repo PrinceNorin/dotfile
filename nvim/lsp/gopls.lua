@@ -9,8 +9,11 @@ return {
     map('n', 'K', vim.lsp.buf.hover, opts)
     map('n', '<leader>ca', vim.lsp.buf.code_action, opts)
 
-    local function organize_imports()
-      local params = vim.lsp.util.make_range_params()
+    local function organize_imports(client)
+      local win_id = vim.api.nvim_get_current_win()
+      local encoding = client.offset_encoding or 'utf-18'
+      local params = vim.lsp.util.make_range_params(win_id, encoding)
+
       params.context = {
         diagnostics = vim.lsp.diagnostic.get_line_diagnostics(),
         only = { 'source.organizeImports' },
@@ -21,12 +24,7 @@ return {
 
         for _, result in pairs(results or {}) do
           if result.edit then
-            local client = vim.lsp.get_client_by_id(ctx.client_id)
-            if client then
-              vim.lsp.util.apply_workspace_edit(result.edit, client.offset_encoding or 'utf-16')
-            else
-              vim.lsp.util.apply_workspace_edit(result.edit, 'utf-16')
-            end
+            vim.lsp.util.apply_workspace_edit(result.edit, encoding)
           end
         end
       end)
@@ -38,7 +36,7 @@ return {
         local clients = vim.lsp.get_clients({ bufnr = args.buf, name = 'gopls' })
         if #clients == 0 then return end
 
-        organize_imports()
+        organize_imports(clients[1])
 
         vim.lsp.buf.format({
           bufnr = args.buf,

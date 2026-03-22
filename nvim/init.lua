@@ -129,6 +129,20 @@ autocmd('BufWritePre', {
   end
 })
 
--- Colorscheme (pick one of built-in ones)
--- vim.cmd.colorscheme('doom-one')
-vim.cmd.colorscheme('doom-gruvbox')
+-- Colorscheme
+vim.o.background = 'dark'
+vim.cmd.colorscheme('nightfox')
+
+-- Custom functions
+local function toggle_theme()
+  if vim.o.background == 'dark' then
+    vim.o.background = 'light'
+    vim.cmd.colorscheme('dayfox')
+  else
+    vim.o.background = 'dark'
+    vim.cmd.colorscheme('nightfox')
+  end
+end
+
+-- Switch between dark or light theme
+map('n', '<leader>tt', toggle_theme)
